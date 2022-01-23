@@ -6,12 +6,12 @@ The aim of this project is to present different text mining frameworks and analy
 
 ## How to run the framework?
 
-Pass the path of the project e.g., `/home/xyz/project/` as a parameter of the main class in `selfharm_prediction.py`. Create the following directories inside this path: 1) `training_data`, 2) `test_data`. Therefore keep the individual files of training and test data in the respective directories. Create a directory, called, `output` in the main project path to store the outputs of individual test documents. 
+Pass the path of the project e.g., `/home/selfharm_project/` as a parameter of the main class in `selfharm_prediction.py`. Create the following directories inside this path: 1) `training_data`, 2) `test_data`. Therefore keep the individual files of training and test data in the respective directories. Create a directory, called, `output` in the main project path to store the outputs of individual test documents. 
 
 Subsequently, run the following lines to identify self-harm for individual test documents. 
 
 ```
-clf=selfharm_prediction('/home/tanmay/erisk2021/',model='entropy',model_path='saved_models/entropy_svm/',clf_opt='s',no_of_selected_terms=3000,output_file='output/entropy_svm_phase11.json')
+clf=selfharm_prediction('/home/xyz/selfharm_project/',model='entropy',model_path='saved_models/entropy_svm/',clf_opt='s',no_of_selected_terms=3000,output_file='output/entropy_svm_phase11.json')
   
 clf.selfharm_prediction
 ```
