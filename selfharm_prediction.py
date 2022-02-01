@@ -338,14 +338,14 @@ class selfharm_prediction():
      def classification(self,trn_data,trn_cat,tst_data):  
         tst_vec=[]; tst_docs=[]             
         predicted=[0 for i in range(0,len(tst_data))]
-        if self.model=='tfidf':
-#            clf,ext2=self.tfidf_training_model(trn_data,trn_cat)
-            clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')
+        if self.model=='tfidf':                         # TF-IDF based Bag-of-Words Model
+#            clf,ext2=self.tfidf_training_model(trn_data,trn_cat)               # Buidling the training model for the first time
+            clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')         # Call the trained model from second time onwards
             predicted = clf.predict(tst_data)
             predicted_probability = clf.predict_proba(tst_data)
-        elif self.model=='entropy':
-#           clf,ext2,trn_dct,trn_model=self.entropy_training_model(trn_data,trn_cat)
-           clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')
+        elif self.model=='entropy':                        # Entropy based Bag-of-Words Model
+#           clf,ext2,trn_dct,trn_model=self.entropy_training_model(trn_data,trn_cat)   # Buidling the training model for the first time
+           clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')                 # Call the trained model from second time onwards
            trn_dct=joblib.load(self.path+self.model_path+'trn_dict.joblib')
            trn_model=joblib.load(self.path+self.model_path+'trn_model.joblib')
            for doc in tst_data:
@@ -361,9 +361,9 @@ class selfharm_prediction():
                   tst_vec.append(vec) 
            predicted = clf.predict(tst_vec)
            predicted_probability = clf.predict_proba(tst_vec)
-        elif self.model=='doc2vec':
-#            clf,ext2,trn_model=self.doc2vec_training_model(trn_data,trn_cat)
-            clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')
+        elif self.model=='doc2vec':                             # Paragraph Embedding based CBOW and Skipgram Model
+#            clf,ext2,trn_model=self.doc2vec_training_model(trn_data,trn_cat)          # Buidling the training model for the first time
+            clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')                # Call the trained model from second time onwards
             trn_model=joblib.load(self.path+self.model_path+'trn_model.joblib')
             for doc in tst_data:
                 doc=nltk.word_tokenize(doc.lower())
@@ -371,7 +371,7 @@ class selfharm_prediction():
                 tst_vec.append(inf_vec)
             predicted = clf.predict(tst_vec)     
             predicted_probability = clf.predict_proba(tst_vec)
-        elif self.model=='bert':
+        elif self.model=='bert':                            # Uncased BERT model from Higgingface
             trn_model,trn_tokenizer,class_names=self.bert_training_model(trn_data,trn_cat) 
             predicted=[]; predicted_probability=[]
             for doc in tst_data:
@@ -390,6 +390,8 @@ class selfharm_prediction():
      def selfharm_prediction(self):
         print('\n ***** Getting Training Data ***** \n')          
         trn_data,trn_cat=self.get_training_data() 
+
+# Experiments using training data only (dividing it into training and validation set)
 
 #        labels=np.asarray(trn_cat)     # Class labels in nparray format             
 #        X_train, X_test, y_train, y_test = train_test_split(trn_data, trn_cat, test_size=0.20, random_state=42,stratify=labels)
