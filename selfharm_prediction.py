@@ -371,7 +371,7 @@ class selfharm_prediction():
                 tst_vec.append(inf_vec)
             predicted = clf.predict(tst_vec)     
             predicted_probability = clf.predict_proba(tst_vec)
-        elif self.model=='bert':                            # BioBERT model from Higgingface
+        elif self.model=='bert':                            # A given BERT model from Higgingface. Default is BioBERT.
             trn_model,trn_tokenizer,class_names=self.bert_training_model(trn_data,trn_cat) 
             predicted=[]; predicted_probability=[]
             for doc in tst_data:
