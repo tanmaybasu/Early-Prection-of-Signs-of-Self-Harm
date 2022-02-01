@@ -391,7 +391,7 @@ class selfharm_prediction():
         print('\n ***** Getting Training Data ***** \n')          
         trn_data,trn_cat=self.get_training_data() 
 
-# Experiments using training data only (dividing it into training and validation set)
+# Experiments using training data only during training phase (dividing it into training and validation set)
 
 #        labels=np.asarray(trn_cat)     # Class labels in nparray format             
 #        X_train, X_test, y_train, y_test = train_test_split(trn_data, trn_cat, test_size=0.20, random_state=42,stratify=labels)
