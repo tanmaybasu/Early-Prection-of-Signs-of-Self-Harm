@@ -1,9 +1,7 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Feb 16 22:21:00 2021
-
 @author: Tanmay Basu
 """
 import csv,json,os,re,sys
@@ -16,7 +14,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.model_selection import GridSearchCV 
 from sklearn.pipeline import Pipeline
-from sklearn.externals import joblib
+import joblib
+#from sklearn.externals import joblib
 from sklearn import svm 
 from sklearn.linear_model import LogisticRegression 
 from sklearn.ensemble import RandomForestClassifier
@@ -57,16 +56,16 @@ class get_torch_data_format(torch.utils.data.Dataset):
 # Main Class
 
 class selfharm_prediction():
-     def __init__(self,path='/home/tanmay/erisk2021/',model='tfidf', model_path='saved_models/entropy_svm/', model_source='monologg/biobert_v1.1_pubmed',vec_len=20,clf_opt='s',no_of_selected_terms=None, output_file='output.json'):
+     def __init__(self,path='/home/xyz/selfharm/',model='tfidf', model_path='saved_models/entropy_svm/', model_source='monologg/biobert_v1.1_pubmed',vec_len=20,clf_opt='s',no_of_selected_features=None, output_file='output.json'):
         self.path = path
         self.model = model
         self.model_path=model_path
         self.model_source = model_source
         self.clf_opt=clf_opt
         self.vec_len=int(vec_len) 
-        self.no_of_selected_terms=no_of_selected_terms
-        if self.no_of_selected_terms!=None:
-            self.no_of_selected_terms=int(self.no_of_selected_terms)
+        self.no_of_selected_features=no_of_selected_features
+        if self.no_of_selected_features!=None:
+            self.no_of_selected_features=int(self.no_of_selected_features)
         self.output_file=output_file
 # Get training data
      def get_training_data(self):
@@ -115,13 +114,12 @@ class selfharm_prediction():
                 trn_data.append(all_text)
                 trn_cat.append(int(golden_truths[idn][0]))
         return trn_data, trn_cat
-    
+
 # Selection of classifiers  
      def classification_pipeline(self):    
         # AdaBoost 
-        if self.clf_opt=='a':
+        if self.clf_opt=='ab':
             print('\n\t### Training AdaBoost Classifier ### \n')
-            ext2='adaboost'
             be1 = svm.SVC(kernel='linear', class_weight='balanced',probability=True)              
             be2 = LogisticRegression(solver='liblinear',class_weight='balanced') 
             be3 = DecisionTreeClassifier(max_depth=50)
@@ -134,7 +132,6 @@ class selfharm_prediction():
         # Logistic Regression 
         elif self.clf_opt=='lr':
             print('\n\t### Training Logistic Regression Classifier ### \n')
-            ext2='logistic_regression'
             clf = LogisticRegression(solver='liblinear',class_weight='balanced') 
             clf_parameters = {
             'clf__random_state':(0,10),
@@ -142,35 +139,34 @@ class selfharm_prediction():
         # Linear SVC 
         elif self.clf_opt=='ls':   
             print('\n\t### Training Linear SVC Classifier ### \n')
-            ext2='linear_svc'
             clf = svm.LinearSVC(class_weight='balanced')  
             clf_parameters = {
             'clf__C':(0.1,1,2,10,50,100),
             }         
         # Multinomial Naive Bayes
-        elif self.clf_opt=='n':
+        elif self.clf_opt=='nb':
             print('\n\t### Training Multinomial Naive Bayes Classifier ### \n')
-            ext2='naive_bayes'
             clf = MultinomialNB(fit_prior=True, class_prior=None)  
             clf_parameters = {
             'clf__alpha':(0,1),
             }            
         # Random Forest 
-        elif self.clf_opt=='r':
+        elif self.clf_opt=='rf':
             print('\n\t ### Training Random Forest Classifier ### \n')
             ext2='random_forest'
-            clf = RandomForestClassifier(criterion='gini',max_features=None,class_weight='balanced')
+            clf = RandomForestClassifier(max_features=None,class_weight='balanced')
             clf_parameters = {
-            'clf__n_estimators':(30,50,100,200),
-            'clf__max_depth':(10,20),
+            'clf__criterion':('entropy','gini'),       
+            'clf__n_estimators':(30,50,100),
+            'clf__max_depth':(10,20,30,50,100,200),
             }          
         # Support Vector Machine  
-        elif self.clf_opt=='s': 
+        elif self.clf_opt=='svm': 
             print('\n\t### Training Linear SVM Classifier ### \n')
             ext2='svm'
             clf = svm.SVC(kernel='linear', class_weight='balanced',probability=True)  
             clf_parameters = {
-            'clf__C':(0.1,0.5,1,2,10,50,100),
+            'clf__C':(0.1,1,5,10,50,100),
             }
         else:
             print('Select a valid classifier \n')
@@ -181,19 +177,19 @@ class selfharm_prediction():
      def tfidf_training_model(self,trn_data,trn_cat):
         print('\n ***** Building TFIDF Based Training Model ***** \n')         
         clf,clf_parameters,ext2=self.classification_pipeline() 
-        if self.no_of_selected_terms==None:                                  # To use all the terms of the vocabulary
+        if self.no_of_selected_features==None:                                  # To use all the terms of the vocabulary
             pipeline = Pipeline([
                 ('vect', CountVectorizer(token_pattern=r'\b\w+\b')),
                 ('tfidf', TfidfTransformer(use_idf=True,smooth_idf=True)),     
                 ('clf', clf),]) 
         else:
             try:                                        # To use selected terms of the vocabulary
-                print('No of Terms \t'+str(self.no_of_selected_terms)) 
+                print('No of Selected Terms \t'+str(self.no_of_selected_features)) 
                 pipeline = Pipeline([
                     ('vect', CountVectorizer(token_pattern=r'\b\w+\b')),
                     ('tfidf', TfidfTransformer(use_idf=True,smooth_idf=True)),
-                    ('feature_selection', SelectKBest(chi2, k=self.no_of_selected_terms)),                         # k=1000 is recommended 
-            #        ('feature_selection', SelectKBest(mutual_info_classif, k=self.no_of_selected_terms)),        
+                    ('feature_selection', SelectKBest(chi2, k=self.no_of_selected_features)),                         # k=1000 is recommended 
+            #        ('feature_selection', SelectKBest(mutual_info_classif, k=self.no_of_selected_features)),        
                     ('clf', clf),]) 
             except:                                  # If the input is wrong
                 print('Wrong Input. Enter number of terms correctly. \n')
@@ -208,16 +204,18 @@ class selfharm_prediction():
         grid.fit(trn_data,trn_cat)     
         clf= grid.best_estimator_  
 #        print(clf)     
-        joblib.dump(clf, self.path+self.model_path+'trn_clf.joblib')
+        flname=self.path+self.model_path+self.model+'_'+self.clf_opt+'_'+str(self.no_of_selected_features)
+        joblib.dump(clf, flname+'_clf.joblib') 
         return clf,ext2
 
 # Doc2Vec model    
      def doc2vec_training_model(self,trn_data,trn_cat):
         print('\n ***** Building Doc2Vec Based Training Model ***** \n')
-        print('No of Features \t'+str(self.vec_len)) 
-        tagged_data = [TaggedDocument(words=nltk.word_tokenize(_d.lower()), tags=[str(i)]) for i, _d in enumerate(trn_data)]
+        print('No of Features \t'+str(self.no_of_selected_features)) 
+        extra_data=self.get_other_data('/home/tanmay/erisk2021/code/')
+        tagged_data = [TaggedDocument(words=nltk.word_tokenize(_d.lower()), tags=[str(i)]) for i, _d in enumerate(trn_data+extra_data)]
         max_epochs = 10       
-        trn_model = Doc2Vec(vector_size=self.vec_len,alpha=0.025,min_alpha=0.00025,min_count=1,dm =1)
+        trn_model = Doc2Vec(vector_size=self.no_of_selected_features,alpha=0.025,min_alpha=0.00025,min_count=1,dm =1)
         trn_model.build_vocab(tagged_data)  
         print('Number of Training Samples {0}'.format(trn_model.corpus_count))   
         for epoch in range(max_epochs):
@@ -239,16 +237,17 @@ class selfharm_prediction():
         grid = GridSearchCV(pipeline,clf_parameters,scoring='f1_micro',cv=10) 
         grid.fit(trn_vec,trn_cat)     
         clf= grid.best_estimator_
-#        print(clf)  
-        joblib.dump(clf, self.path+self.model_path+'trn_clf.joblib')
-        joblib.dump(trn_model, self.path+self.model_path+'trn_model.joblib')
+        print(clf)  
+        flname=self.path+self.model_path+self.model+'_'+self.clf_opt+'_'+str(self.no_of_selected_features)
+        joblib.dump(clf, flname+'_clf.joblib')
+        joblib.dump(trn_model, flname+'_model.joblib')
                 
         return clf,ext2,trn_model
      
 # LogEntropy model    
      def entropy_training_model(self,trn_data,trn_cat): 
         print('\n ***** Building Entropy Based Training Model ***** \n')
-        print('No of Terms \t'+str(self.no_of_selected_terms)) 
+        print('No of Selected Terms \t'+str(self.no_of_selected_features)) 
         trn_vec=[]; trn_docs=[]; 
         for doc in trn_data:
             doc=nltk.word_tokenize(doc.lower())
@@ -257,6 +256,7 @@ class selfharm_prediction():
         corpus = [trn_dct.doc2bow(row) for row in trn_docs]
         trn_model = LogEntropyModel(corpus)
         no_of_terms=len(trn_dct.keys())
+        print('\n Number of Terms in the Vocabulary\t'+str(no_of_terms)+'\n')
         for item in corpus:
             vec=[0]*no_of_terms                                 # Empty vector of terms for a document
             vector = trn_model[item]                            # LogEntropy Vectors
@@ -265,11 +265,11 @@ class selfharm_prediction():
             trn_vec.append(vec)
     # Classificiation and feature selection pipelines
         clf,clf_parameters,ext2=self.classification_pipeline() 
-        if self.no_of_selected_terms==None:                                  # To use all the terms of the vocabulary
+        if self.no_of_selected_features==None:                                  # To use all the terms of the vocabulary
             pipeline = Pipeline([('clf', clf),])    
         else:
             try: 
-                pipeline = Pipeline([('feature_selection', SelectKBest(chi2, k=self.no_of_selected_terms)), 
+                pipeline = Pipeline([('feature_selection', SelectKBest(chi2, k=self.no_of_selected_features)), 
                     ('clf', clf),])  
             except:                                  # If the input is wrong
                 print('Wrong Input. Enter number of terms correctly. \n')
@@ -278,9 +278,10 @@ class selfharm_prediction():
         grid.fit(trn_vec,trn_cat)     
         clf= grid.best_estimator_
 #        print(clf)
-        joblib.dump(clf, self.path+self.model_path+'trn_clf.joblib')
-        joblib.dump(trn_dct, self.path+self.model_path+'trn_dict.joblib')
-        joblib.dump(trn_model, self.path+self.model_path+'trn_model.joblib')
+        flname=self.path+self.model_path+self.model+'_'+self.clf_opt+'_'+str(self.no_of_selected_features)
+        joblib.dump(clf, flname+'_clf.joblib')
+        joblib.dump(trn_model, flname+'_model.joblib')
+        joblib.dump(trn_dct, flname+'_dict.joblib')
         
         return clf,ext2,trn_dct,trn_model
 
@@ -338,16 +339,18 @@ class selfharm_prediction():
      def classification(self,trn_data,trn_cat,tst_data):  
         tst_vec=[]; tst_docs=[]             
         predicted=[0 for i in range(0,len(tst_data))]
-        if self.model=='tfidf':                         # TF-IDF based Bag-of-Words Model
-#            clf,ext2=self.tfidf_training_model(trn_data,trn_cat)               # Buidling the training model for the first time
-            clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')         # Call the trained model from second time onwards
+        if self.model=='tfidf':
+            clf,ext2=self.tfidf_training_model(trn_data,trn_cat)
+            flname=self.path+self.model_path+self.model+'_'+self.clf_opt+'_'+str(self.no_of_selected_features)
+            clf=joblib.load(flname+'_clf.joblib')
             predicted = clf.predict(tst_data)
             predicted_probability = clf.predict_proba(tst_data)
-        elif self.model=='entropy':                        # Entropy based Bag-of-Words Model
-#           clf,ext2,trn_dct,trn_model=self.entropy_training_model(trn_data,trn_cat)   # Buidling the training model for the first time
-           clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')                 # Call the trained model from second time onwards
-           trn_dct=joblib.load(self.path+self.model_path+'trn_dict.joblib')
-           trn_model=joblib.load(self.path+self.model_path+'trn_model.joblib')
+        elif self.model=='entropy':
+           clf,ext2,trn_dct,trn_model=self.entropy_training_model(trn_data,trn_cat)
+           flname=self.path+self.model_path+self.model+'_'+self.clf_opt+'_'+str(self.no_of_selected_features)
+           clf=joblib.load(flname+'_clf.joblib')
+           trn_dct=joblib.load(flname+'_dict.joblib')
+           trn_model=joblib.load(flname+'_model.joblib')
            for doc in tst_data:
                doc=nltk.word_tokenize(doc.lower()) 
                tst_docs.append(doc)                                
@@ -361,16 +364,17 @@ class selfharm_prediction():
                   tst_vec.append(vec) 
            predicted = clf.predict(tst_vec)
            predicted_probability = clf.predict_proba(tst_vec)
-        elif self.model=='doc2vec':                             # Paragraph Embedding based CBOW and Skipgram Model
-#            clf,ext2,trn_model=self.doc2vec_training_model(trn_data,trn_cat)          # Buidling the training model for the first time
-            clf=joblib.load(self.path+self.model_path+'trn_clf.joblib')                # Call the trained model from second time onwards
-            trn_model=joblib.load(self.path+self.model_path+'trn_model.joblib')
+        elif self.model=='doc2vec':
+            clf,ext2,trn_model=self.doc2vec_training_model(trn_data,trn_cat)
+            flname=self.path+self.model_path+self.model+'_'+self.clf_opt+'_'+str(self.no_of_selected_features)
+            clf=joblib.load(flname+'_clf.joblib')
+            trn_model=joblib.load(flname+'_model.joblib')
             for doc in tst_data:
                 doc=nltk.word_tokenize(doc.lower())
                 inf_vec = trn_model.infer_vector(doc,epochs=100)
                 tst_vec.append(inf_vec)
             predicted = clf.predict(tst_vec)     
-            predicted_probability = clf.predict_proba(tst_vec)
+            predicted_probability = clf.predict_proba(tst_vec) 
         elif self.model=='bert':                            # A given BERT model from Higgingface. Default is BioBERT.
             trn_model,trn_tokenizer,class_names=self.bert_training_model(trn_data,trn_cat) 
             predicted=[]; predicted_probability=[]
@@ -392,6 +396,15 @@ class selfharm_prediction():
         trn_data,trn_cat=self.get_training_data() 
 
 # Experiments using training data only during training phase (dividing it into training and validation set)
+
+#        labels=np.asarray(trn_cat)     # Class labels in nparray format             
+#        X_train, X_test, y_train, y_test = train_test_split(trn_data, trn_cat, test_size=0.20, random_state=42,stratify=labels)
+#        predicted,predicted_probability=self.classification(X_train,y_train,X_test)
+#    # Evaluation
+#        fm=f1_score(y_test, predicted, average='macro') 
+#        print ('\n Macro Averaged F1-Score :'+str(fm))
+#        fm=f1_score(y_test, predicted, average='micro') 
+#        print ('\n Mircro Averaged F1-Score:'+str(fm))
         
 #        skf = StratifiedKFold(n_splits=10)
 #        predicted_class_labels=[]; actual_class_labels=[]; count=0;
@@ -416,6 +429,21 @@ class selfharm_prediction():
 #        fm=f1_score(actual_class_labels, predicted_class_labels, average='micro') 
 #        print ('\n Mircro Averaged F1-Score:'+str(fm))
 
+#        print('\n ***** Getting Test Data ***** \n')            
+#        fl=open(self.path+'test_data/t2_test_data_phase1.json', 'r')  
+#        reader = json.load(fl)
+#        fl.close()        
+#        tst_dict={}; tst_data=[]; 
+#        unique_id=[]; 
+#        for item in reader:
+#            idn=item['nick']
+#            if idn not in unique_id:
+#                unique_id.append(idn)
+#                tst_dict[idn]=[]
+#                tst_dict[idn].append(item['content'])
+#        for item in tst_dict:
+#            text=''.join(tst_dict[item])
+#            tst_data.append(text)
 
         print('\n ***** Getting Test Data ***** \n')   
         tst_dict={}; tst_data=[]; 
@@ -461,4 +489,4 @@ class selfharm_prediction():
             tst_results.append(tmp)
         with open(self.path+self.output_file, 'w', encoding='utf-8') as fl:
             json.dump(tst_results, fl, ensure_ascii=False, indent=4)
-       
+
