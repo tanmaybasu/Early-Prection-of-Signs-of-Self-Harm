@@ -429,22 +429,6 @@ class selfharm_prediction():
 #        fm=f1_score(actual_class_labels, predicted_class_labels, average='micro') 
 #        print ('\n Mircro Averaged F1-Score:'+str(fm))
 
-#        print('\n ***** Getting Test Data ***** \n')            
-#        fl=open(self.path+'test_data/t2_test_data_phase1.json', 'r')  
-#        reader = json.load(fl)
-#        fl.close()        
-#        tst_dict={}; tst_data=[]; 
-#        unique_id=[]; 
-#        for item in reader:
-#            idn=item['nick']
-#            if idn not in unique_id:
-#                unique_id.append(idn)
-#                tst_dict[idn]=[]
-#                tst_dict[idn].append(item['content'])
-#        for item in tst_dict:
-#            text=''.join(tst_dict[item])
-#            tst_data.append(text)
-
         print('\n ***** Getting Test Data ***** \n')   
         tst_dict={}; tst_data=[]; 
         unique_id=[]; 
