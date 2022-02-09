@@ -6,7 +6,7 @@ The aim of this project is to present different text mining frameworks and analy
 
 ## How to run the framework?
 
-Pass the path of the project e.g., `/home/selfharm_project/` as a parameter of the main class in `selfharm_prediction.py`. Create the following directories inside this path: 1) `training_data`, 2) `test_data`. Therefore keep the individual files of training and test data in the respective directories. Create a directory, called, `output` in the main project path to store the outputs of individual test documents. 
+Pass the path of the project e.g., `/home/selfharm_project/` as a parameter of the main class in `selfharm_prediction.py`. Create the following directories inside this path: 1) `training_data`, 2) `test_data`. Therefore keep the individual files of training and test data in the respective directories. Create a directory, called, `output` in the main project path to store the outputs of individual test documents. Create another directory `saved_models` in the main project path to store the trained models, so that they can be repeatedly used. 
 
 Subsequently, run the following lines to identify self-harm for individual test documents. 
 
