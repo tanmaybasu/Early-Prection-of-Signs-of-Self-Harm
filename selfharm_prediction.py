@@ -392,15 +392,6 @@ class selfharm_prediction():
         trn_data,trn_cat=self.get_training_data() 
 
 # Experiments using training data only during training phase (dividing it into training and validation set)
-
-#        labels=np.asarray(trn_cat)     # Class labels in nparray format             
-#        X_train, X_test, y_train, y_test = train_test_split(trn_data, trn_cat, test_size=0.20, random_state=42,stratify=labels)
-#        predicted,predicted_probability=self.classification(X_train,y_train,X_test)
-#    # Evaluation
-#        fm=f1_score(y_test, predicted, average='macro') 
-#        print ('\n Macro Averaged F1-Score :'+str(fm))
-#        fm=f1_score(y_test, predicted, average='micro') 
-#        print ('\n Mircro Averaged F1-Score:'+str(fm))
         
 #        skf = StratifiedKFold(n_splits=10)
 #        predicted_class_labels=[]; actual_class_labels=[]; count=0;
@@ -425,21 +416,6 @@ class selfharm_prediction():
 #        fm=f1_score(actual_class_labels, predicted_class_labels, average='micro') 
 #        print ('\n Mircro Averaged F1-Score:'+str(fm))
 
-#        print('\n ***** Getting Test Data ***** \n')            
-#        fl=open(self.path+'test_data/t2_test_data_phase1.json', 'r')  
-#        reader = json.load(fl)
-#        fl.close()        
-#        tst_dict={}; tst_data=[]; 
-#        unique_id=[]; 
-#        for item in reader:
-#            idn=item['nick']
-#            if idn not in unique_id:
-#                unique_id.append(idn)
-#                tst_dict[idn]=[]
-#                tst_dict[idn].append(item['content'])
-#        for item in tst_dict:
-#            text=''.join(tst_dict[item])
-#            tst_data.append(text)
 
         print('\n ***** Getting Test Data ***** \n')   
         tst_dict={}; tst_data=[]; 
