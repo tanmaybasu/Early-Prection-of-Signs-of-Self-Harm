@@ -414,10 +414,9 @@ class selfharm_prediction():
             for item in predicted:
                 predicted_class_labels.append(item)
     # Evaluation
-        fm=f1_score(actual_class_labels, predicted_class_labels, average='macro') 
-        print ('\n Macro Averaged F1-Score :'+str(fm))
-        fm=f1_score(actual_class_labels, predicted_class_labels, average='micro') 
-        print ('\n Mircro Averaged F1-Score:'+str(fm))
+        class_names=list(Counter(tst_cat).keys())
+        print(classification_report(actual_class_label, predicted_class_labels, target_names=class_names))
+
 
 # Experiments on Given Test Data during Test Phase
 #        print('\n ***** Getting Test Data ***** \n')   
