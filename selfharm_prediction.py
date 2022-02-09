@@ -396,81 +396,72 @@ class selfharm_prediction():
         trn_data,trn_cat=self.get_training_data() 
 
 # Experiments using training data only during training phase (dividing it into training and validation set)
+        skf = StratifiedKFold(n_splits=10)
+        predicted_class_labels=[]; actual_class_labels=[]; count=0;
+        for train_index, test_index in skf.split(trn_data,trn_cat):
+            X_train=[]; y_train=[]; X_test=[]; y_test=[]
+            for item in train_index:
+                X_train.append(trn_data[item])
+                y_train.append(trn_cat[item])
+            for item in test_index:
+                X_test.append(trn_data[item])
+                y_test.append(trn_cat[item])
+            count+=1                
+            print('Level '+str(count))
+            predicted,predicted_probability=self.classification(X_train,y_train,X_test) 
+            for item in y_test:
+                actual_class_labels.append(item)
+            for item in predicted:
+                predicted_class_labels.append(item)
+    # Evaluation
+        fm=f1_score(actual_class_labels, predicted_class_labels, average='macro') 
+        print ('\n Macro Averaged F1-Score :'+str(fm))
+        fm=f1_score(actual_class_labels, predicted_class_labels, average='micro') 
+        print ('\n Mircro Averaged F1-Score:'+str(fm))
 
-#        labels=np.asarray(trn_cat)     # Class labels in nparray format             
-#        X_train, X_test, y_train, y_test = train_test_split(trn_data, trn_cat, test_size=0.20, random_state=42,stratify=labels)
-#        predicted,predicted_probability=self.classification(X_train,y_train,X_test)
-#    # Evaluation
-#        fm=f1_score(y_test, predicted, average='macro') 
-#        print ('\n Macro Averaged F1-Score :'+str(fm))
-#        fm=f1_score(y_test, predicted, average='micro') 
-#        print ('\n Mircro Averaged F1-Score:'+str(fm))
-        
-#        skf = StratifiedKFold(n_splits=10)
-#        predicted_class_labels=[]; actual_class_labels=[]; count=0;
-#        for train_index, test_index in skf.split(trn_data,trn_cat):
-#            X_train=[]; y_train=[]; X_test=[]; y_test=[]
-#            for item in train_index:
-#                X_train.append(trn_data[item])
-#                y_train.append(trn_cat[item])
-#            for item in test_index:
-#                X_test.append(trn_data[item])
-#                y_test.append(trn_cat[item])
-#            count+=1                
-#            print('Level '+str(count))
-#            predicted,predicted_probability=self.classification(X_train,y_train,X_test) 
-#            for item in y_test:
-#                actual_class_labels.append(item)
-#            for item in predicted:
-#                predicted_class_labels.append(item)
-#    # Evaluation
-#        fm=f1_score(actual_class_labels, predicted_class_labels, average='macro') 
-#        print ('\n Macro Averaged F1-Score :'+str(fm))
-#        fm=f1_score(actual_class_labels, predicted_class_labels, average='micro') 
-#        print ('\n Mircro Averaged F1-Score:'+str(fm))
-
-        print('\n ***** Getting Test Data ***** \n')   
-        tst_dict={}; tst_data=[]; 
-        unique_id=[]; 
-        tst_files=os.listdir(self.path+'test_data')    
-        if tst_files==[]:
-            print('There is no test document in the directory \n')
-        else:
-            for elm in tst_files:
-                if elm.find('.json')>0:                             # Checking if it is a JSON file
-                    fl=open(self.path+'test_data/'+elm, 'r')  
-                    reader = json.load(fl)
-                    fl.close()        
-                    for item in reader:
-                        idn=item['nick']
-                        if item['number']==0 and idn not in unique_id:
-                                unique_id.append(idn)
-                                tst_dict[idn]=[]
-                                tst_dict[idn].append(item['content'])
-                        elif idn in unique_id:
-                            tst_dict[idn].append(item['content'])
-            for item in tst_dict:
-                text=''.join(tst_dict[item])
-                tst_data.append(text)
-
-        print('\n ***** Classifying Test Data ***** \n')   
-        predicted_class_labels=[];
-        predicted_class_labels,predicted_probability=self.classification(trn_data,trn_cat,tst_data)
-        
-        tst_results=[]; 
-        keys=list(tst_dict)
-        for i in range(0,len(tst_data)):
-            tmp={}; 
-            tmp['nick']=keys[i]
-            tmp['decision']=0
-            if predicted_probability[i][0]>=predicted_probability[i][1]:
-                tmp['score']=predicted_probability[i][0]
-            else:
-                tmp['score']=predicted_probability[i][1]
-#            tmp['decision']=int(predicted_class_labels[i])
-            if tmp['score']>=0.75:
-                tmp['decision']=int(predicted_class_labels[i])
-            tst_results.append(tmp)
-        with open(self.path+self.output_file, 'w', encoding='utf-8') as fl:
-            json.dump(tst_results, fl, ensure_ascii=False, indent=4)
+# Experiments on Given Test Data during Test Phase
+#        print('\n ***** Getting Test Data ***** \n')   
+#        tst_dict={}; tst_data=[]; 
+#        unique_id=[]; 
+#        tst_files=os.listdir(self.path+'test_data')    
+#        if tst_files==[]:
+#            print('There is no test document in the directory \n')
+#        else:
+#            for elm in tst_files:
+#                if elm.find('.json')>0:                             # Checking if it is a JSON file
+#                    fl=open(self.path+'test_data/'+elm, 'r')  
+#                    reader = json.load(fl)
+#                    fl.close()        
+#                    for item in reader:
+#                        idn=item['nick']
+#                        if item['number']==0 and idn not in unique_id:
+#                                unique_id.append(idn)
+#                                tst_dict[idn]=[]
+#                                tst_dict[idn].append(item['content'])
+#                        elif idn in unique_id:
+#                            tst_dict[idn].append(item['content'])
+#            for item in tst_dict:
+#                text=''.join(tst_dict[item])
+#                tst_data.append(text)
+#
+#        print('\n ***** Classifying Test Data ***** \n')   
+#        predicted_class_labels=[];
+#        predicted_class_labels,predicted_probability=self.classification(trn_data,trn_cat,tst_data)
+#        
+#        tst_results=[]; 
+#        keys=list(tst_dict)
+#        for i in range(0,len(tst_data)):
+#            tmp={}; 
+#            tmp['nick']=keys[i]
+#            tmp['decision']=0
+#            if predicted_probability[i][0]>=predicted_probability[i][1]:
+#                tmp['score']=predicted_probability[i][0]
+#            else:
+#                tmp['score']=predicted_probability[i][1]
+##            tmp['decision']=int(predicted_class_labels[i])
+#            if tmp['score']>=0.75:
+#                tmp['decision']=int(predicted_class_labels[i])
+#            tst_results.append(tmp)
+#        with open(self.path+self.output_file, 'w', encoding='utf-8') as fl:
+#            json.dump(tst_results, fl, ensure_ascii=False, indent=4)
 
