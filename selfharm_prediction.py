@@ -476,4 +476,6 @@ class selfharm_prediction():
                 tst_results.append(tmp)
             with open(self.path+self.output_file, 'w', encoding='utf-8') as fl:
                 json.dump(tst_results, fl, ensure_ascii=False, indent=4)
+            
+            print('\n !!!!! Submission file with the test data class labels is ready !!!!! \n')   
 
