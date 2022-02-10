@@ -7,7 +7,8 @@ Created on Tue Feb 16 22:21:00 2021
 import csv,json,os,re,sys
 import nltk
 import numpy as np
-import torch
+import statistics
+#import torch
 from nltk.corpus import stopwords
 import xml.etree.ElementTree as ET
 from sklearn.feature_extraction.text import CountVectorizer
@@ -30,9 +31,9 @@ from sklearn.metrics import classification_report
 from gensim.models import LogEntropyModel
 from gensim.corpora import Dictionary
 from gensim.models.doc2vec import Doc2Vec,TaggedDocument 
-from transformers import BertTokenizerFast, BertForSequenceClassification
-from transformers import Trainer, TrainingArguments
 from collections import Counter
+#from transformers import BertTokenizerFast, BertForSequenceClassification
+#from transformers import Trainer, TrainingArguments
 
 
 en_stopwords = ['a', 'about', 'above', 'across', 'after', 'again', 'against', 'all', 'almost', 'alone', 'along', 'already', 'also', 'although', 'always', 'among', 'an', 'and', 'another', 'any', 'anybody', 'anyone', 'anything', 'anywhere', 'are', 'area', 'areas', 'around', 'as', 'ask', 'asked', 'asking', 'asks', 'at', 'away', 'b', 'back', 'backed', 'backing', 'backs', 'be', 'became', 'because', 'become', 'becomes', 'been', 'before', 'began', 'behind', 'being', 'beings', 'best', 'better', 'between', 'big', 'both', 'but', 'by', 'c', 'came', 'can', 'cannot', 'case', 'cases', 'certain', 'certainly', 'clear', 'clearly', 'come', 'could', 'd', 'did', 'differ', 'different', 'differently', 'do', 'does', 'done', 'down', 'down', 'downed', 'downing', 'downs', 'during', 'e', 'each', 'early', 'either', 'end', 'ended', 'ending', 'ends', 'enough', 'even', 'evenly', 'ever', 'every', 'everybody', 'everyone', 'everything', 'everywhere', 'f', 'face', 'faces', 'fact', 'facts', 'far', 'felt', 'few', 'find', 'finds', 'first', 'for', 'four', 'from', 'full', 'fully', 'further', 'furthered', 'furthering', 'furthers', 'g', 'gave', 'general', 'generally', 'get', 'gets', 'give', 'given', 'gives', 'go', 'going', 'good', 'goods', 'got', 'great', 'greater', 'greatest', 'group', 'grouped', 'grouping', 'groups', 'h', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'herself', 'high', 'high', 'high', 'higher', 'highest', 'him', 'himself', 'his', 'how', 'however', 'i', 'if', 'important', 'in', 'interest', 'interested', 'interesting', 'interests', 'into', 'is', 'it', 'its', 'itself', 'j', 'just', 'k', 'keep', 'keeps', 'kind', 'knew', 'know', 'known', 'knows', 'l', 'large', 'largely', 'last', 'later', 'latest', 'least', 'less', 'let', 'lets', 'like', 'likely', 'long', 'longer', 'longest', 'm', 'made', 'make', 'making', 'man', 'many', 'may', 'me', 'member', 'members', 'men', 'might', 'more', 'most', 'mostly', 'mr', 'mrs', 'much', 'must', 'my', 'myself', 'n', 'necessary', 'need', 'needed', 'needing', 'needs', 'never', 'new', 'new', 'newer', 'newest', 'next', 'no', 'nobody', 'non', 'noone', 'not', 'nothing', 'now', 'nowhere', 'number', 'numbers', 'o', 'of', 'off', 'often', 'old', 'older', 'oldest', 'on', 'once', 'one', 'only', 'open', 'opened', 'opening', 'opens', 'or', 'order', 'ordered', 'ordering', 'orders', 'other', 'others', 'our', 'out', 'over', 'p', 'part', 'parted', 'parting', 'parts', 'per', 'perhaps', 'place', 'places', 'point', 'pointed', 'pointing', 'points', 'possible', 'present', 'presented', 'presenting', 'presents', 'problem', 'problems', 'put', 'puts', 'q', 'quite', 'r', 'rather', 'really', 'right', 'right', 'room', 'rooms', 's', 'said', 'same', 'saw', 'say', 'says', 'second', 'seconds', 'see', 'seem', 'seemed', 'seeming', 'seems', 'sees', 'several', 'shall', 'she', 'should', 'show', 'showed', 'showing', 'shows', 'side', 'sides', 'since', 'small', 'smaller', 'smallest', 'so', 'some', 'somebody', 'someone', 'something', 'somewhere', 'state', 'states', 'still', 'still', 'such', 'sure', 't', 'take', 'taken', 'than', 'that', 'the', 'their', 'them', 'then', 'there', 'therefore', 'these', 'they', 'thing', 'things', 'think', 'thinks', 'this', 'those', 'though', 'thought', 'thoughts', 'three', 'through', 'thus', 'to', 'today', 'together', 'too', 'took', 'toward', 'turn', 'turned', 'turning', 'turns', 'two', 'u', 'under', 'until', 'up', 'upon', 'us', 'use', 'used', 'uses', 'v', 'very', 'w', 'want', 'wanted', 'wanting', 'wants', 'was', 'way', 'ways', 'we', 'well', 'wells', 'went', 'were', 'what', 'when', 'where', 'whether', 'which', 'while', 'who', 'whole', 'whose', 'why', 'will', 'with', 'within', 'without', 'work', 'worked', 'working', 'works', 'would', 'x', 'y', 'year', 'years', 'yet', 'you', 'young', 'younger', 'youngest', 'your', 'yours', 'z']
@@ -42,18 +43,18 @@ for word in nltk_stopwords:
         en_stopwords.append(word)
 
 # Class for Torch Model
-class get_torch_data_format(torch.utils.data.Dataset):
-    def __init__(self, encodings, labels):
-        self.encodings = encodings
-        self.labels = labels
-
-    def __getitem__(self, idx):
-        item = {k: torch.tensor(v[idx]) for k, v in self.encodings.items()}
-        item["labels"] = torch.tensor([self.labels[idx]])
-        return item
-
-    def __len__(self):
-        return len(self.labels)
+#class get_torch_data_format(torch.utils.data.Dataset):
+#    def __init__(self, encodings, labels):
+#        self.encodings = encodings
+#        self.labels = labels
+#
+#    def __getitem__(self, idx):
+#        item = {k: torch.tensor(v[idx]) for k, v in self.encodings.items()}
+#        item["labels"] = torch.tensor([self.labels[idx]])
+#        return item
+#
+#    def __len__(self):
+#        return len(self.labels)
 
 # Main Class
 
@@ -348,7 +349,7 @@ class selfharm_prediction():
             predicted = clf.predict(tst_data)
             predicted_probability = clf.predict_proba(tst_data)
         elif self.model=='entropy':
-           clf,ext2,trn_dct,trn_model=self.entropy_training_model(trn_data,trn_cat)
+#           clf,ext2,trn_dct,trn_model=self.entropy_training_model(trn_data,trn_cat)
            flname=self.path+self.model_path+self.model+'_'+self.clf_opt+'_'+str(self.no_of_selected_features)
            clf=joblib.load(flname+'_clf.joblib')
            trn_dct=joblib.load(flname+'_dict.joblib')
@@ -399,8 +400,8 @@ class selfharm_prediction():
 
 # Experiments using training data only during training phase (dividing it into training and validation set)
         skf = StratifiedKFold(n_splits=10)
-        predicted_class_labels=[]; actual_class_labels=[]; count=0; confidence_score=[];
-        for train_index, test_index in skf.split(trn_data,trn_cat):
+        predicted_class_labels=[]; actual_class_labels=[]; 
+        count=0; probs=[];
         for train_index, test_index in skf.split(trn_data,trn_cat):
             X_train=[]; y_train=[]; X_test=[]; y_test=[]
             for item in train_index:
@@ -410,17 +411,24 @@ class selfharm_prediction():
                 X_test.append(trn_data[item])
                 y_test.append(trn_cat[item])
             count+=1                
-            print('Level '+str(count))
+            print('Training Phase '+str(count))
             predicted,predicted_probability=self.classification(X_train,y_train,X_test) 
-            confidence_score.append(predicted_probability)
+            for item in predicted_probability:
+                probs.append(float(max(item)))
             for item in y_test:
                 actual_class_labels.append(item)
             for item in predicted:
                 predicted_class_labels.append(item)
+#        print(round(statistics.mean(probs),3))
+#        print(round(statistics.variance(probs),3))            
+        confidence_score=statistics.mean(probs)-statistics.variance(probs)
+        confidence_score=round(confidence_score, 3)
+        print ('\n The Probablity of Confidence of the Classifier: \t'+str(confidence_score)+'\n')        
+
     # Evaluation
         class_names=list(Counter(actual_class_labels).keys())
-        print(classification_report(actual_class_labels, predicted_class_labels, target_names=class_names))
-        print ('The Probablity of Confidence of the Classifier: \t'+str(sum(confidence_score)/len(confidence_score))+'\n')
+        class_names = [str(x) for x in class_names]
+        print(classification_report(actual_class_labels, predicted_class_labels, target_names=class_names))        
 
 # Experiments on Given Test Data during Test Phase
 #        print('\n ***** Getting Test Data ***** \n')   
