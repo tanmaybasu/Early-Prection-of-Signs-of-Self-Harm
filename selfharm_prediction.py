@@ -431,48 +431,49 @@ class selfharm_prediction():
         print(classification_report(actual_class_labels, predicted_class_labels, target_names=class_names))        
 
 # Experiments on Given Test Data during Test Phase
-#        print('\n ***** Getting Test Data ***** \n')   
-#        tst_dict={}; tst_data=[]; 
-#        unique_id=[]; 
-#        tst_files=os.listdir(self.path+'test_data')    
-#        if tst_files==[]:
-#            print('There is no test document in the directory \n')
-#        else:
-#            for elm in tst_files:
-#                if elm.find('.json')>0:                             # Checking if it is a JSON file
-#                    fl=open(self.path+'test_data/'+elm, 'r')  
-#                    reader = json.load(fl)
-#                    fl.close()        
-#                    for item in reader:
-#                        idn=item['nick']
-#                        if item['number']==0 and idn not in unique_id:
-#                                unique_id.append(idn)
-#                                tst_dict[idn]=[]
-#                                tst_dict[idn].append(item['content'])
-#                        elif idn in unique_id:
-#                            tst_dict[idn].append(item['content'])
-#            for item in tst_dict:
-#                text=''.join(tst_dict[item])
-#                tst_data.append(text)
-#
-#        print('\n ***** Classifying Test Data ***** \n')   
-#        predicted_class_labels=[];
-#        predicted_class_labels,predicted_probability=self.classification(trn_data,trn_cat,tst_data)
-#        
-#        tst_results=[]; 
-#        keys=list(tst_dict)
-#        for i in range(0,len(tst_data)):
-#            tmp={}; 
-#            tmp['nick']=keys[i]
-#            tmp['decision']=0
-#            if predicted_probability[i][0]>=predicted_probability[i][1]:
-#                tmp['score']=predicted_probability[i][0]
-#            else:
-#                tmp['score']=predicted_probability[i][1]
-##            tmp['decision']=int(predicted_class_labels[i])
-#            if tmp['score']>=0.75:
-#                tmp['decision']=int(predicted_class_labels[i])
-#            tst_results.append(tmp)
-#        with open(self.path+self.output_file, 'w', encoding='utf-8') as fl:
-#            json.dump(tst_results, fl, ensure_ascii=False, indent=4)
+        if confidence_score>0.85:
+            print('\n ***** Getting Test Data ***** \n')   
+            tst_dict={}; tst_data=[]; 
+            unique_id=[]; 
+            tst_files=os.listdir(self.path+'test_data')    
+            if tst_files==[]:
+                print('There is no test document in the directory \n')
+            else:
+                for elm in tst_files:
+                    if elm.find('.json')>0:                             # Checking if it is a JSON file
+                        fl=open(self.path+'test_data/'+elm, 'r')  
+                        reader = json.load(fl)
+                        fl.close()        
+                        for item in reader:
+                            idn=item['nick']
+                            if item['number']==0 and idn not in unique_id:
+                                    unique_id.append(idn)
+                                    tst_dict[idn]=[]
+                                    tst_dict[idn].append(item['content'])
+                            elif idn in unique_id:
+                                tst_dict[idn].append(item['content'])
+                for item in tst_dict:
+                    text=''.join(tst_dict[item])
+                    tst_data.append(text)
+    
+            print('\n ***** Classifying Test Data ***** \n')   
+            predicted_class_labels=[];
+            predicted_class_labels,predicted_probability=self.classification(trn_data,trn_cat,tst_data)
+            
+            tst_results=[]; 
+            keys=list(tst_dict)
+            for i in range(0,len(tst_data)):
+                tmp={}; 
+                tmp['nick']=keys[i]
+                tmp['decision']=0
+                if predicted_probability[i][0]>=predicted_probability[i][1]:
+                    tmp['score']=predicted_probability[i][0]
+                else:
+                    tmp['score']=predicted_probability[i][1]
+    #            tmp['decision']=int(predicted_class_labels[i])
+                if tmp['score']>=0.75:
+                    tmp['decision']=int(predicted_class_labels[i])
+                tst_results.append(tmp)
+            with open(self.path+self.output_file, 'w', encoding='utf-8') as fl:
+                json.dump(tst_results, fl, ensure_ascii=False, indent=4)
 
