@@ -215,8 +215,7 @@ class selfharm_prediction():
      def doc2vec_training_model(self,trn_data,trn_cat):
         print('\n ***** Building Doc2Vec Based Training Model ***** \n')
         print('No of Features \t'+str(self.no_of_selected_features)) 
-        extra_data=self.get_other_data('/home/tanmay/erisk2021/code/')
-        tagged_data = [TaggedDocument(words=nltk.word_tokenize(_d.lower()), tags=[str(i)]) for i, _d in enumerate(trn_data+extra_data)]
+        tagged_data = [TaggedDocument(words=nltk.word_tokenize(_d.lower()), tags=[str(i)]) for i, _d in enumerate(trn_data)]
         max_epochs = 10       
         trn_model = Doc2Vec(vector_size=self.no_of_selected_features,alpha=0.025,min_alpha=0.00025,min_count=1,dm =1)
         trn_model.build_vocab(tagged_data)  
@@ -247,7 +246,7 @@ class selfharm_prediction():
                 
         return clf,ext2,trn_model
      
-# LogEntropy model    
+# Entropy model    
      def entropy_training_model(self,trn_data,trn_cat): 
         print('\n ***** Building Entropy Based Training Model ***** \n')
         print('No of Selected Terms \t'+str(self.no_of_selected_features)) 
