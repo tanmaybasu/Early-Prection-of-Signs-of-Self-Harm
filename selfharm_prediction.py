@@ -348,7 +348,7 @@ class selfharm_prediction():
             predicted = clf.predict(tst_data)
             predicted_probability = clf.predict_proba(tst_data)
         elif self.model=='entropy':
-#           clf,ext2,trn_dct,trn_model=self.entropy_training_model(trn_data,trn_cat)
+           clf,ext2,trn_dct,trn_model=self.entropy_training_model(trn_data,trn_cat)
            flname=self.path+self.model_path+self.model+'_'+self.clf_opt+'_'+str(self.no_of_selected_features)
            clf=joblib.load(flname+'_clf.joblib')
            trn_dct=joblib.load(flname+'_dict.joblib')
